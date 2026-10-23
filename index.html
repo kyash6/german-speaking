@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta name="referrer" content="no-referrer">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0b1730">
@@ -252,20 +253,21 @@ function speak(text,hlEl){
     audio.playbackRate=rate; audio.defaultPlaybackRate=rate;
     audio.ontimeupdate=()=>{if(hl&&audio.duration)hl.mark(off+Math.floor(t.length*audio.currentTime/audio.duration))};
     audio.onended=()=>{off+=t.length;k++;next()};
-    audio.onerror=()=>{if(id===runId&&hasSS)speakDevice(text,hl,rate)};
-    audio.play().catch(()=>{if(id===runId&&hasSS)speakDevice(text,hl,rate)});
+    const fail=()=>{if(id!==runId||!hasSS)return;runId++;speakDevice(text,hl,rate,true)};
+    audio.onerror=fail;
+    audio.play().catch(e=>{if(e.name!=="AbortError")fail()});
   };
   next();
 }
-function speakDevice(text,hl,rate){
+function speakDevice(text,hl,rate,now){
   speechSynthesis.cancel();
-  setTimeout(()=>{
+  (now?f=>f():f=>setTimeout(f,60))(()=>{
     const u=new SpeechSynthesisUtterance(text);
     u.lang="de-DE"; u.rate=rate;
     const v=voices.find(v=>v.name===engine)||voices[0]; if(v)u.voice=v;
     if(hl){u.onboundary=e=>hl.mark(e.charIndex);u.onend=()=>hl.ws.forEach(w=>w.classList.remove("hl"))}
     window._u=u; speechSynthesis.speak(u);
-  },60);
+  });
 }
 function sayCurrent(){
   const c=deck[i];if(!c)return;
