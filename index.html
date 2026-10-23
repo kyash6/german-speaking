@@ -213,30 +213,59 @@ function renderList(){
   $("list").innerHTML=deck.map(c=>`<div class="li" style="--tc:${TC[c.topic][0]};--tc2:${TC[c.topic][1]}"><div class="row"><span class="tag">${c.topic}</span>${known.has(c.id)?'<span class="done">✓</span>':""}</div><h3>${c.q}</h3><div class="en">${c.en}</div><p>${c.a}</p><div style="margin-top:8px;display:flex;gap:8px"><button class="mini" data-say="${c.id}">🔊 Antwort</button><button class="mini" data-sayq="${c.id}">🔊 Frage</button></div></div>`).join("");
 }
 
-/* TTS */
-let voices=[], voice=null;
+/* TTS: online Google German voice (works on iPhone silent mode), device voices as fallback */
+const hasSS="speechSynthesis" in window;
+let voices=[], engine=store.get("gv2","g"), audio=new Audio(), runId=0;
 function loadVoices(){
-  voices=speechSynthesis.getVoices().filter(v=>/^de/i.test(v.lang));
-  const pref=["Anna","Petra","Markus","Helena","Yannick","Google Deutsch","Katja","Conrad"];
-  const saved=store.get("gv",null);
-  voices.sort((a,b)=>{const ia=pref.findIndex(p=>a.name.includes(p)),ib=pref.findIndex(p=>b.name.includes(p));return (ia<0?99:ia)-(ib<0?99:ib)});
-  $("voice").innerHTML=voices.length?voices.map((v,n)=>`<option value="${n}">${v.name.replace(/\(.*\)/,"").trim()} · ${v.lang}</option>`).join(""):'<option>German voice (default)</option>';
-  const si=voices.findIndex(v=>v.name===saved);
-  voice=voices[si>=0?si:0]||null; if(si>=0)$("voice").value=si;
+  voices=hasSS?speechSynthesis.getVoices().filter(v=>/^de/i.test(v.lang)):[];
+  $("voice").innerHTML='<option value="g">🇩🇪 Google Deutsch (online)</option>'+voices.map((v,n)=>`<option value="${v.name}">${v.name.replace(/\(.*\)/,"").trim()} · ${v.lang}</option>`).join("");
+  if(engine!=="g"&&!voices.some(v=>v.name===engine)&&voices.length)engine="g";
+  $("voice").value=engine;
 }
-if("speechSynthesis" in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
-function speak(text,hlEl){
-  if(!("speechSynthesis" in window))return alert("Speech not supported on this browser");
-  speechSynthesis.cancel();
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang="de-DE"; if(voice)u.voice=voice; u.rate=+$("rate").value;
-  if(hlEl){
-    const ws=[...hlEl.querySelectorAll(".w")], starts=[];let p=0;
-    ws.forEach(w=>{p=text.indexOf(w.textContent,p);starts.push(p);p+=w.textContent.length});
-    u.onboundary=e=>{ws.forEach(w=>w.classList.remove("hl"));let n=starts.findLastIndex(s=>s<=e.charIndex);if(n>=0)ws[n].classList.add("hl")};
-    u.onend=()=>ws.forEach(w=>w.classList.remove("hl"));
+loadVoices(); if(hasSS)speechSynthesis.onvoiceschanged=loadVoices;
+function stopTTS(){runId++;audio.pause();if(hasSS)speechSynthesis.cancel();document.querySelectorAll(".w.hl").forEach(w=>w.classList.remove("hl"))}
+function chunks(text){
+  const out=[];let cur="";
+  for(const part of text.match(/[^.!?,]+[.!?,]*\s*/g)||[text]){
+    if((cur+part).length>180&&cur){out.push(cur);cur=""}
+    cur+=part;
   }
-  speechSynthesis.speak(u);
+  if(cur.trim())out.push(cur);
+  return out;
+}
+function wordSpans(hlEl,text){
+  if(!hlEl)return null;
+  const ws=[...hlEl.querySelectorAll(".w")],starts=[];let p=0;
+  ws.forEach(w=>{p=text.indexOf(w.textContent,p);starts.push(p);p+=w.textContent.length});
+  return {ws,starts,mark(ci){ws.forEach(w=>w.classList.remove("hl"));let n=-1;starts.forEach((s,k)=>{if(s<=ci)n=k});if(n>=0)ws[n].classList.add("hl")}};
+}
+function speak(text,hlEl){
+  stopTTS();
+  const id=runId, hl=wordSpans(hlEl,text), rate=+$("rate").value;
+  if(engine!=="g"&&hasSS)return speakDevice(text,hl,rate);
+  const parts=chunks(text);let k=0,off=0;
+  const next=()=>{
+    if(id!==runId)return;
+    if(k>=parts.length){hl&&hl.ws.forEach(w=>w.classList.remove("hl"));return}
+    const t=parts[k];
+    audio.src="https://translate.google.com/translate_tts?ie=UTF-8&tl=de&client=tw-ob&q="+encodeURIComponent(t.trim());
+    audio.playbackRate=rate; audio.defaultPlaybackRate=rate;
+    audio.ontimeupdate=()=>{if(hl&&audio.duration)hl.mark(off+Math.floor(t.length*audio.currentTime/audio.duration))};
+    audio.onended=()=>{off+=t.length;k++;next()};
+    audio.onerror=()=>{if(id===runId&&hasSS)speakDevice(text,hl,rate)};
+    audio.play().catch(()=>{if(id===runId&&hasSS)speakDevice(text,hl,rate)});
+  };
+  next();
+}
+function speakDevice(text,hl,rate){
+  speechSynthesis.cancel();
+  setTimeout(()=>{
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang="de-DE"; u.rate=rate;
+    const v=voices.find(v=>v.name===engine)||voices[0]; if(v)u.voice=v;
+    if(hl){u.onboundary=e=>hl.mark(e.charIndex);u.onend=()=>hl.ws.forEach(w=>w.classList.remove("hl"))}
+    window._u=u; speechSynthesis.speak(u);
+  },60);
 }
 function sayCurrent(){
   const c=deck[i];if(!c)return;
@@ -246,16 +275,16 @@ function sayCurrent(){
 /* events */
 $("chips").onclick=e=>{const t=e.target.dataset.t;if(!t)return;topic=t;i=0;build();chips();render()};
 $("scene").onclick=()=>{if(deck[i])$("card").classList.toggle("flip")};
-$("next").onclick=()=>{speechSynthesis?.cancel();i=(i+1)%Math.max(deck.length,1);render()};
-$("prev").onclick=()=>{speechSynthesis?.cancel();i=(i-1+deck.length)%Math.max(deck.length,1);render()};
+$("next").onclick=()=>{stopTTS();i=(i+1)%Math.max(deck.length,1);render()};
+$("prev").onclick=()=>{stopTTS();i=(i-1+deck.length)%Math.max(deck.length,1);render()};
 $("say").onclick=sayCurrent;
 $("mark").onclick=()=>{const c=deck[i];if(!c)return;known.has(c.id)?known.delete(c.id):known.add(c.id);store.set("gk",[...known]);if(onlyTodo){build()}else if(known.has(c.id)){i=(i+1)%deck.length}render()};
 $("shuffle").onclick=()=>{for(let n=deck.length-1;n>0;n--){const r=Math.random()*(n+1)|0;[deck[n],deck[r]]=[deck[r],deck[n]]}i=0;render()};
 $("todo").onclick=()=>{onlyTodo=!onlyTodo;i=0;build();render()};
 $("listBtn").onclick=()=>{listMode=true;$("list").classList.add("show");$("study").style.display="none";$("list").insertAdjacentHTML("beforebegin","");render();$("list").insertAdjacentHTML("afterbegin",'<button class="btn" id="back">← Back to cards</button>');$("back").onclick=()=>{listMode=false;$("list").classList.remove("show");$("study").style.display="";render()}};
 $("list").addEventListener("click",e=>{const a=e.target.dataset.say,q=e.target.dataset.sayq;if(a)speak(D[a].a);if(q)speak(D[q].q)});
-$("rate").oninput=e=>{$("rateV").textContent=(+e.target.value).toFixed(2)+"×";store.set("gr",e.target.value)};
-$("voice").onchange=e=>{voice=voices[e.target.value]||null;if(voice)store.set("gv",voice.name)};
+$("rate").oninput=e=>{audio.playbackRate=+e.target.value;$("rateV").textContent=(+e.target.value).toFixed(2)+"×";store.set("gr",e.target.value)};
+$("voice").onchange=e=>{engine=e.target.value;store.set("gv2",engine);stopTTS()};
 document.onkeydown=e=>{if(listMode)return;if(e.key==="ArrowRight")$("next").click();else if(e.key==="ArrowLeft")$("prev").click();else if(e.key===" "){e.preventDefault();$("scene").click()}else if(e.key.toLowerCase()==="s")sayCurrent()};
 let tx=0;$("scene").addEventListener("touchstart",e=>tx=e.touches[0].clientX,{passive:true});
 $("scene").addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>60){e.preventDefault();(dx<0?$("next"):$("prev")).click()}});
