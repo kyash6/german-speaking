@@ -83,14 +83,25 @@ box-shadow:0 6px 0 var(--ink),inset 0 3px 0 rgba(255,255,255,.25),inset 0 -4px 0
 .card.pop{animation:pop .3s cubic-bezier(.3,1.6,.5,1)}
 @media (max-width:480px){.row2{grid-template-columns:1fr 1fr}.face{padding:16px}.ctrls .btn{font-size:1rem}}
 @media (min-width:1024px){.card{min-height:480px}}
+.hdr-r{display:flex;gap:10px;align-items:center}
+.btn.fsb{padding:6px 12px;font-size:1.2rem;border-radius:12px;box-shadow:0 4px 0 var(--ink),inset 0 2px 0 rgba(255,255,255,.25)}
+.fsx{display:none!important;position:fixed;top:calc(10px + env(safe-area-inset-top));right:12px;z-index:50;width:46px;height:46px;padding:0!important;border-radius:50%!important}
+body.focus .fsx{display:flex!important}
+body.focus header,body.focus .chips,body.focus .hint,body.focus .flag{display:none}
+body.focus .wrap{padding-top:16px;max-width:1100px}
+body.focus .bar{padding-right:60px}
+body.focus .scene,body.focus .ctrls,body.focus .row2,body.focus .speed{max-width:900px}
+body.focus .card{min-height:calc(100vh - 330px)}
+@media (max-width:480px){body.focus .card{min-height:calc(100vh - 380px)}}
 </style>
 </head>
 <body>
 <div class="flag"></div>
 <header>
   <h1>🇩🇪 Deutsch Speaking<small>Edexcel IGCSE 4GN1 · oral prep cards</small></h1>
-  <select id="voice" aria-label="Voice"></select>
+  <div class="hdr-r"><select id="voice" aria-label="Voice"></select><button class="btn fsb" id="fs" title="Fullscreen (F)">⛶</button></div>
 </header>
+<button class="btn fsx" id="fsx" title="Exit fullscreen">✕</button>
 <div class="wrap">
   <div class="chips" id="chips"></div>
   <div class="bar"><span id="count"></span><div class="prog"><i id="prog"></i></div><span id="known"></span></div>
@@ -110,7 +121,7 @@ box-shadow:0 6px 0 var(--ink),inset 0 3px 0 rgba(255,255,255,.25),inset 0 -4px 0
         </div>
       </div>
     </div>
-    <div class="hint">Tap card to flip · Keys: ← → space S</div>
+    <div class="hint">Tap card to flip · Keys: ← → space S F</div>
     <div class="ctrls">
       <button class="btn" id="prev">← Back</button>
       <button class="btn speak" id="say">🔊 Hören</button>
@@ -251,7 +262,7 @@ function speak(text,hlEl){
     const t=parts[k];
     audio.src="https://translate.google.com/translate_tts?ie=UTF-8&tl=de&client=tw-ob&q="+encodeURIComponent(t.trim());
     audio.playbackRate=rate; audio.defaultPlaybackRate=rate;
-    audio.ontimeupdate=()=>{if(hl&&audio.duration)hl.mark(off+Math.floor(t.length*audio.currentTime/audio.duration))};
+    audio.ontimeupdate=()=>{if(!hl)return;const d=isFinite(audio.duration)&&audio.duration>0?audio.duration:t.length*0.07;hl.mark(off+Math.min(t.length-1,Math.floor(t.length*audio.currentTime/d)))};
     audio.onended=()=>{off+=t.length;k++;next()};
     const fail=()=>{if(id!==runId||!hasSS)return;runId++;speakDevice(text,hl,rate,true)};
     audio.onerror=fail;
@@ -287,9 +298,23 @@ $("listBtn").onclick=()=>{listMode=true;$("list").classList.add("show");$("study
 $("list").addEventListener("click",e=>{const a=e.target.dataset.say,q=e.target.dataset.sayq;if(a)speak(D[a].a);if(q)speak(D[q].q)});
 $("rate").oninput=e=>{audio.playbackRate=+e.target.value;$("rateV").textContent=(+e.target.value).toFixed(2)+"×";store.set("gr",e.target.value)};
 $("voice").onchange=e=>{engine=e.target.value;store.set("gv2",engine);stopTTS()};
-document.onkeydown=e=>{if(listMode)return;if(e.key==="ArrowRight")$("next").click();else if(e.key==="ArrowLeft")$("prev").click();else if(e.key===" "){e.preventDefault();$("scene").click()}else if(e.key.toLowerCase()==="s")sayCurrent()};
+document.onkeydown=e=>{if(listMode)return;if(e.key==="ArrowRight")$("next").click();else if(e.key==="ArrowLeft")$("prev").click();else if(e.key===" "){e.preventDefault();$("scene").click()}else if(e.key.toLowerCase()==="s")sayCurrent();else if(e.key.toLowerCase()==="f")setFocus(!document.body.classList.contains("focus"))};
 let tx=0;$("scene").addEventListener("touchstart",e=>tx=e.touches[0].clientX,{passive:true});
 $("scene").addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>60){e.preventDefault();(dx<0?$("next"):$("prev")).click()}});
+
+/* fullscreen: real fullscreen where supported, plus a focus layout (iPhone has no fullscreen API) */
+const fsEl=document.documentElement;
+const fsReq=fsEl.requestFullscreen||fsEl.webkitRequestFullscreen, fsExit=document.exitFullscreen||document.webkitExitFullscreen;
+const fsOn=()=>document.fullscreenElement||document.webkitFullscreenElement;
+function setFocus(on){
+  document.body.classList.toggle("focus",on);
+  if(on&&fsReq&&!fsOn())try{const r=fsReq.call(fsEl);r&&r.catch&&r.catch(()=>{})}catch{}
+  if(!on&&fsOn()&&fsExit)try{fsExit.call(document)}catch{}
+  window.scrollTo(0,0);
+}
+$("fs").onclick=()=>setFocus(true);
+$("fsx").onclick=()=>setFocus(false);
+["fullscreenchange","webkitfullscreenchange"].forEach(ev=>document.addEventListener(ev,()=>{if(!fsOn())document.body.classList.remove("focus")}));
 
 const r=store.get("gr",null);if(r){$("rate").value=r;$("rateV").textContent=(+r).toFixed(2)+"×"}
 chips();build();render();
