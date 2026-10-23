@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1a1a">
+<title>German Speaking Cards</title>
+<style>
+:root{--bg:#f4f1ea;--card:#fff;--ink:#1a1a1a;--muted:#6b6b6b;--line:#1a1a1a;--red:#dd0000;--gold:#ffce00;--ok:#1f8a4c}
+@media (prefers-color-scheme:dark){:root{--bg:#121212;--card:#1e1e1e;--ink:#f2f2f2;--muted:#a0a0a0;--line:#f2f2f2}}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+.flag{height:6px;background:linear-gradient(#000 0 33%,var(--red) 33% 66%,var(--gold) 66%)}
+header{max-width:900px;margin:0 auto;padding:18px 16px 8px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:1.3rem;font-weight:800;letter-spacing:-.02em}
+h1 small{display:block;font-size:.75rem;font-weight:500;color:var(--muted)}
+.wrap{max-width:900px;margin:0 auto;padding:0 16px 32px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:8px 0 12px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 14px;font:600 .85rem inherit;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--ink);color:var(--bg)}
+.bar{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:.85rem;color:var(--muted)}
+.prog{flex:1;height:8px;border:2px solid var(--line);border-radius:99px;overflow:hidden;background:var(--card)}
+.prog i{display:block;height:100%;background:var(--ok);width:0;transition:width .3s}
+.scene{perspective:1400px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.card{position:relative;min-height:min(58vh,440px);transition:transform .5s;transform-style:preserve-3d}
+.card.flip{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;background:var(--card);border:3px solid var(--line);border-radius:20px;box-shadow:6px 6px 0 var(--line);padding:24px;display:flex;flex-direction:column;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:auto}
+.back{transform:rotateY(180deg)}
+.tag{display:inline-flex;align-self:flex-start;gap:6px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:var(--gold);color:#000;padding:3px 10px;border-radius:6px}
+.q{font-size:clamp(1.4rem,4.5vw,2.1rem);font-weight:800;line-height:1.25;margin:auto 0 10px;letter-spacing:-.01em}
+.en{color:var(--muted);font-size:1rem;margin-bottom:auto}
+.a{font-size:clamp(1.1rem,3.4vw,1.5rem);line-height:1.55;margin:auto 0}
+.a .w{border-radius:4px;transition:background .15s}
+.a .w.hl{background:var(--gold);color:#000}
+.hint{text-align:center;font-size:.8rem;color:var(--muted);margin-top:14px}
+.small{font-size:.85rem;color:var(--muted);margin-top:12px}
+.ctrls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:20px}
+.btn{border:3px solid var(--line);background:var(--card);color:var(--ink);border-radius:14px;padding:14px 8px;font:700 1rem inherit;cursor:pointer;box-shadow:3px 3px 0 var(--line);transition:transform .08s,box-shadow .08s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--line)}
+.btn.speak{background:var(--red);color:#fff}
+.btn.known{background:var(--ok);color:#fff}
+.row2{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}
+.row2 .btn{font-size:.85rem;padding:10px 6px}
+.btn.on{background:var(--ink);color:var(--bg)}
+.speed{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:.85rem;color:var(--muted)}
+.speed input{flex:1;accent-color:var(--red)}
+select{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:4px 6px;font:inherit;font-size:.8rem;max-width:180px}
+.list{display:none;gap:12px;flex-direction:column}
+.list.show{display:flex}
+.li{background:var(--card);border:3px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:4px 4px 0 var(--line)}
+.li h3{font-size:1.05rem;margin:4px 0 2px}
+.li p{font-size:.95rem}
+.li .en{font-size:.85rem;margin:0 0 6px}
+.li .row{display:flex;justify-content:space-between;align-items:center}
+.mini{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:4px 10px;font:700 .8rem inherit;cursor:pointer}
+.done{color:var(--ok);font-weight:800}
+@media (min-width:768px){.ctrls,.row2{max-width:640px;margin-left:auto;margin-right:auto}.ctrls{margin-top:24px}}
+</style>
+</head>
+<body>
+<div class="flag"></div>
+<header>
+  <h1>🇩🇪 Deutsch Speaking<small>Edexcel IGCSE 4GN1 · oral prep cards</small></h1>
+  <select id="voice" aria-label="Voice"></select>
+</header>
+<div class="wrap">
+  <div class="chips" id="chips"></div>
+  <div class="bar"><span id="count"></span><div class="prog"><i id="prog"></i></div><span id="known"></span></div>
+
+  <div id="study">
+    <div class="scene" id="scene">
+      <div class="card" id="card">
+        <div class="face front">
+          <span class="tag" id="ftag"></span>
+          <div class="q" id="fq"></div>
+          <div class="en" id="fen"></div>
+        </div>
+        <div class="face back">
+          <span class="tag" id="btag"></span>
+          <div class="a" id="ba"></div>
+          <div class="small" id="bq"></div>
+        </div>
+      </div>
+    </div>
+    <div class="hint">Tap card to flip · Keys: ← → space S</div>
+    <div class="ctrls">
+      <button class="btn" id="prev">← Back</button>
+      <button class="btn speak" id="say">🔊 Hören</button>
+      <button class="btn" id="next">Next →</button>
+    </div>
+    <div class="row2">
+      <button class="btn known" id="mark">✓ Got it</button>
+      <button class="btn" id="shuffle">🔀 Shuffle</button>
+      <button class="btn" id="todo">Unlearnt</button>
+      <button class="btn" id="listBtn">☰ List</button>
+    </div>
+    <div class="speed">🐢<input type="range" id="rate" min="0.5" max="1.2" step="0.05" value="0.85">🐇<span id="rateV">0.85×</span></div>
+  </div>
+
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+const D=[
+["A2 Holidays","Wohin fährst du gern in Urlaub und warum?","Where do you like to go on holiday and why?","Ich fahre am liebsten nach Spanien in Urlaub, weil das Essen dort am besten ist. Außerdem hat Spanien sehr schöne Strände, und das Meer ist noch besser!"],
+["A2 Holidays","Beschreibe deinen letzten Urlaub.","Describe your last holiday.","Letzten Sommer bin ich mit meinen Freunden nach Griechenland geflogen. Als wir in Griechenland waren, sind wir in Museen gegangen und haben Monumente besichtigt. Der Urlaub war interessant, aber das Essen war nicht so gut."],
+["A2 Holidays","Was sind deine Reisepläne in den nächsten Ferien?","What are your travel plans for the next holidays?","Nächstes Jahr im Winter werde ich mit meiner Familie nach Italien fahren. Das Essen dort ist sehr lecker und italienisches Essen ist mein Lieblingsessen. Wir wollen Ski fahren, aber es ist so teuer!"],
+["A2 Holidays","Was ist dein Traumreiseziel? Warum?","What is your dream travel destination? Why?","Mein Traumreiseziel ist die Antarktis, weil ich das kalte Klima liebe. Jedoch ist es sehr teuer, dorthin zu reisen, und das Essen ist wahrscheinlich schrecklich."],
+["A2 Holidays","Ist es besser, einen Urlaub mit der Familie oder mit Freunden zu verbringen?","Is it better to spend a holiday with family or with friends?","Ich verbringe meinen Urlaub lieber mit Freunden, weil es viel Spaß macht. Wir können zusammen neue Orte besuchen und viele Fotos machen."],
+["A2 Holidays","Was ist dir wichtig beim Reisen: Entspannung, Kultur, spannende Erlebnisse?","What is important to you when travelling: relaxation, culture, exciting experiences?","Für mich ist Entspannung beim Reisen am wichtigsten, weil ich mich ausruhen möchte. Ich finde Kultur auch interessant, aber ich möchte keinen Stress haben."],
+["A5 Traditions","Welche Feste und Feiertage gibt es in deinem Land?","What festivals and holidays are there in your country?","In meinem Land gibt es Weihnachten, Neujahr und den Nationalfeiertag. Ich mag diese Feste, weil die ganze Familie zusammenkommt."],
+["A5 Traditions","Wie wirst du das nächste Fest feiern?","How will you celebrate the next festival?","Ich werde das nächste Fest mit meiner Familie feiern, weil wir gerne zusammen essen. Wir werden auch Musik hören und viel Spaß haben."],
+["A5 Traditions","Welches Fest findest du am interessantesten und warum?","Which festival do you find most interesting and why?","Ich finde Weihnachten am interessantesten, weil ich viele Geschenke bekomme. Außerdem verbringe ich gerne Zeit mit meiner Familie."],
+["A5 Traditions","Inwiefern sind traditionelle Feste wichtig für Jugendliche?","To what extent are traditional festivals important for young people?","Traditionelle Feste sind für Jugendliche wichtig, weil sie mehr über ihre Kultur lernen können. Außerdem können sie Zeit mit ihrer Familie verbringen."],
+["B1 School","Welche Fächer lernst du am liebsten und warum?","Which subjects do you like learning most and why?","Ich lerne Sport und Wirtschaft am liebsten, weil sie interessant sind. Außerdem finde ich diese Fächer nützlich für die Zukunft."],
+["B1 School","Wie war deine letzte Schulwoche? Was hast du gemacht? Wie war es?","How was your last school week? What did you do? How was it?","Letzte Woche hatte ich viele Prüfungen, aber ich hatte auch Spaß mit meinen Freunden. Die Woche war ziemlich stressig, weil ich viel lernen musste."],
+["B1 School","Welche sind die wichtigsten Schulfächer, meinst du?","Which are the most important school subjects, in your opinion?","Ich denke, Mathematik und Englisch sind sehr wichtige Fächer, weil sie im Leben nützlich sind. Außerdem braucht man diese Fächer für viele Berufe."],
+["B1 School","Wie könnte man den Schultag verbessern?","How could the school day be improved?","Man könnte den Schultag kürzer machen, weil die Schüler dann weniger müde wären. Außerdem könnte es längere Pausen geben."],
+["B1 School","Welche Fächer wirst du nächstes Jahr im IB-Programm wählen? Warum?","Which subjects will you choose next year in the IB? Why?","Nächstes Jahr werde ich Wirtschaft, Sport und Deutsch wählen, weil ich diese Fächer interessant finde. Außerdem möchte ich Wirtschaft später studieren."],
+["B5 Future","Was für Pläne hast du für das nächste Schuljahr?","What plans do you have for next school year?","Nächstes Schuljahr möchte ich gute Noten bekommen, weil sie für meine Zukunft wichtig sind. Außerdem möchte ich mehr Zeit mit meinen Freunden verbringen."],
+["B5 Future","Welche Möglichkeiten gibt es nach der Schule? Welche sind für dich ideal?","What options are there after school? Which are ideal for you?","Nach der Schule kann man studieren oder arbeiten, aber ich möchte studieren. Das ist für mich ideal, weil ich einen guten Beruf haben möchte."],
+["B5 Future","Würdest du ein Pausenjahr machen oder sofort mit dem Studium anfangen? Warum?","Would you take a gap year or start university straight away? Why?","Ich würde sofort mit dem Studium anfangen, weil ich keine Zeit verlieren möchte. Außerdem möchte ich schnell einen guten Beruf finden."],
+["B5 Future","Was hat deine Schule organisiert, um euch mit der Berufswahl zu helfen?","What has your school organised to help you choose a career?","Meine Schule hat Präsentationen und Beratung organisiert, weil wir Hilfe bei der Berufswahl brauchen. Wir können auch Informationen im Internet finden."],
+["B5 Future","Welche Zukunftspläne hast du nach der Uni?","What future plans do you have after university?","Nach der Uni möchte ich einen guten Job finden, weil ich erfolgreich sein möchte. Außerdem möchte ich viel reisen und neue Länder sehen."],
+["C1 Home","Beschreib bitte dein Haus oder deine Wohnung.","Please describe your house or flat.","Mein Haus ist ziemlich groß und hat einen schönen Garten. Ich mag mein Haus, weil es ruhig und gemütlich ist."],
+["C1 Home","Welche Änderungen hat deine Familie im Haus gemacht?","What changes has your family made to the house?","Meine Familie hat die Küche renoviert, weil sie alt war. Außerdem haben wir neue Möbel gekauft."],
+["C1 Home","Wie hast du dein Zimmer gemütlicher gemacht?","How have you made your room cosier?","Ich habe neue Lampen und Bilder für mein Zimmer gekauft, weil es gemütlicher sein sollte. Außerdem halte ich mein Zimmer sauber."],
+["C1 Home","Wenn du älter bist, in was für einem Haus wirst du wohnen?","When you are older, what kind of house will you live in?","Wenn ich älter bin, möchte ich in einem großen Haus mit einem Garten wohnen. Ich möchte dort wohnen, weil ich viel Platz haben möchte."],
+["C1 Home","Warum wohnen manche Leute lieber in einer Wohnung als in einem Haus?","Why do some people prefer living in a flat rather than a house?","Manche Leute wohnen lieber in einer Wohnung, weil sie weniger Arbeit macht. Außerdem ist eine Wohnung oft billiger als ein Haus."],
+["C2 Routine","Kannst du deine tägliche Morgenroutine beschreiben?","Can you describe your daily morning routine?","Morgens stehe ich um sieben Uhr auf und dusche, bevor ich frühstücke. Danach ziehe ich mich an und gehe zur Schule."],
+["C2 Routine","Wie sieht dein typischer Schultag aus?","What does your typical school day look like?","Mein Schultag beginnt um acht Uhr und ich habe viele verschiedene Fächer. Nach der Schule mache ich meine Hausaufgaben, weil sie wichtig sind."],
+["C2 Routine","Wie sieht dein typischer Sonntag aus?","What does your typical Sunday look like?","Sonntags schlafe ich lange und frühstücke mit meiner Familie. Danach treffe ich meine Freunde, weil ich am Wochenende gerne entspanne."],
+["C2 Routine","Hilfst du zu Hause? Was machst du?","Do you help at home? What do you do?","Ja, ich helfe zu Hause und ich räume mein Zimmer auf. Außerdem spüle ich manchmal das Geschirr, weil meine Familie viel zu tun hat."],
+["C2 Routine","Wie hast du neulich mit der Hausarbeit geholfen?","How did you recently help with the housework?","Neulich habe ich das Haus gesaugt und mein Zimmer aufgeräumt. Ich habe geholfen, weil meine Eltern beschäftigt waren."],
+["C2 Routine","Warum ist es wichtig, dass junge Menschen zu Hause helfen? Was ist deine Meinung dazu?","Why is it important for young people to help at home? What's your opinion?","Es ist wichtig, dass junge Menschen zu Hause helfen, weil es fair ist. Meiner Meinung nach sollte jeder etwas im Haushalt machen."],
+["E2 Hobbies","Welche Hobbys und Interessen hast du?","What hobbies and interests do you have?","Meine Hobbys sind Sport, Videospiele und Musik, weil sie mir Spaß machen. Außerdem treffe ich gerne meine Freunde."],
+["E2 Hobbies","Welchen Sport hast du gern als kleines Kind getrieben und warum?","What sport did you like doing as a small child and why?","Als kleines Kind habe ich gerne Fußball gespielt, weil es sehr spannend war. Außerdem habe ich oft mit meinen Freunden gespielt."],
+["E2 Hobbies","Warum ist es wichtig, jeden Tag ein bisschen Sport zu machen?","Why is it important to do a bit of sport every day?","Es ist wichtig, jeden Tag Sport zu machen, weil es gesund ist. Außerdem kann Sport Stress reduzieren und Spaß machen."],
+["E2 Hobbies","Welche Hobbys oder Sportarten möchtest du gern ausprobieren?","Which hobbies or sports would you like to try?","Ich möchte gerne Tennis ausprobieren, weil es interessant aussieht. Außerdem möchte ich vielleicht schwimmen gehen."],
+["E2 Hobbies","Welche Hobbys hat deine Familie?","What hobbies does your family have?","Meine Familie hat verschiedene Hobbys, aber wir mögen alle Sport. Mein Vater spielt gerne Golf, während meine Mutter gerne liest."],
+["E2 Hobbies","Haben du und deine Freunde gemeinsame Interessen? Welche?","Do you and your friends have shared interests? Which?","Ja, meine Freunde und ich haben viele gemeinsame Interessen, weil wir alle Sport mögen. Wir spielen gerne Fußball und Videospiele zusammen."],
+["E2 Hobbies","Was ist besser, Freizeit zu Hause oder im Freien zu verbringen?","Is it better to spend free time at home or outdoors?","Ich finde Freizeit im Freien besser, weil man aktiv sein kann. Außerdem kann man Zeit mit Freunden verbringen."],
+["E2 Hobbies","Ist es wichtig für dich, Freizeit mit Freunden zu verbringen?","Is it important for you to spend free time with friends?","Ja, es ist wichtig für mich, Freizeit mit Freunden zu verbringen, weil es Spaß macht. Außerdem kann ich mit ihnen über meine Probleme sprechen."],
+["E5 Food","Wie wichtig sind Essen und Trinken in deinem Leben?","How important are food and drink in your life?","Essen und Trinken sind sehr wichtig in meinem Leben, weil ich Energie brauche. Ich versuche auch, gesund zu essen."],
+["E5 Food","Was hast du gestern Abend gegessen?","What did you eat yesterday evening?","Gestern Abend habe ich Pizza mit meiner Familie gegessen, weil sie sehr lecker war. Danach habe ich Wasser getrunken."],
+["E5 Food","Warum sind vielleicht manche Leute Vegetarier?","Why might some people be vegetarian?","Manche Leute sind Vegetarier, weil sie keine Tiere essen möchten. Außerdem denken sie, dass eine vegetarische Ernährung gesund sein kann."],
+["E5 Food","Hast du einen ausgewogenen Speiseplan?","Do you have a balanced diet?","Ja, ich habe meistens einen ausgewogenen Speiseplan, weil ich viel Obst und Gemüse esse. Ich esse aber auch manchmal Fast Food."],
+["E5 Food","Beschreibe deine letzte Familienmahlzeit: Wer hat gekocht, was gab es, wie hat es geschmeckt?","Describe your last family meal: who cooked, what was there, how did it taste?","Meine Mutter hat gestern für meine Familie gekocht, und wir haben Reis mit Hähnchen gegessen. Es hat sehr gut geschmeckt, weil das Essen frisch war."],
+["E5 Food","Ist es wichtig, mit der Familie zusammen zu essen?","Is it important to eat together with your family?","Ja, ich finde es wichtig, mit der Familie zusammen zu essen, weil man Zeit zusammen verbringen kann. Außerdem kann man über seinen Tag sprechen."]
+].map((r,i)=>({id:i,topic:r[0],q:r[1],en:r[2],a:r[3]}));
+
+const $=id=>document.getElementById(id);
+const store={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+let known=new Set(store.get("gk",[])), topic="All", onlyTodo=false, deck=[], i=0, listMode=false;
+const topics=["All",...new Set(D.map(c=>c.topic))];
+
+function build(keepShuffle){
+  deck=D.filter(c=>(topic==="All"||c.topic===topic)&&(!onlyTodo||!known.has(c.id)));
+  i=Math.min(i,Math.max(deck.length-1,0));
+}
+function chips(){
+  $("chips").innerHTML=topics.map(t=>`<button class="chip${t===topic?" on":""}" data-t="${t}">${t}</button>`).join("");
+}
+function words(s){return s.split(/(\s+)/).map(w=>/\s/.test(w)?w:`<span class="w">${w}</span>`).join("")}
+function render(){
+  const tot=D.filter(c=>topic==="All"||c.topic===topic);
+  const k=tot.filter(c=>known.has(c.id)).length;
+  $("known").textContent=`${k}/${tot.length} ✓`;
+  $("prog").style.width=(tot.length?k/tot.length*100:0)+"%";
+  $("todo").classList.toggle("on",onlyTodo);
+  $("card").classList.remove("flip");
+  if(listMode){renderList();return}
+  const c=deck[i];
+  if(!c){$("count").textContent="0";$("fq").textContent="Alles gelernt! 🎉";$("fen").textContent="All cards in this set are marked as learnt.";$("ftag").textContent=topic;$("ba").textContent="";return}
+  $("count").textContent=`${i+1} / ${deck.length}`;
+  $("ftag").textContent=$("btag").textContent=c.topic;
+  $("fq").textContent=c.q; $("fen").textContent=c.en;
+  $("ba").innerHTML=words(c.a); $("bq").textContent=c.q;
+  $("mark").textContent=known.has(c.id)?"↺ Unmark":"✓ Got it";
+}
+function renderList(){
+  $("count").textContent=deck.length+" cards";
+  $("list").innerHTML=deck.map(c=>`<div class="li"><div class="row"><span class="tag">${c.topic}</span>${known.has(c.id)?'<span class="done">✓</span>':""}</div><h3>${c.q}</h3><div class="en">${c.en}</div><p>${c.a}</p><div style="margin-top:8px;display:flex;gap:8px"><button class="mini" data-say="${c.id}">🔊 Antwort</button><button class="mini" data-sayq="${c.id}">🔊 Frage</button></div></div>`).join("");
+}
+
+/* TTS */
+let voices=[], voice=null;
+function loadVoices(){
+  voices=speechSynthesis.getVoices().filter(v=>/^de/i.test(v.lang));
+  const pref=["Anna","Petra","Markus","Helena","Yannick","Google Deutsch","Katja","Conrad"];
+  const saved=store.get("gv",null);
+  voices.sort((a,b)=>{const ia=pref.findIndex(p=>a.name.includes(p)),ib=pref.findIndex(p=>b.name.includes(p));return (ia<0?99:ia)-(ib<0?99:ib)});
+  $("voice").innerHTML=voices.length?voices.map((v,n)=>`<option value="${n}">${v.name.replace(/\(.*\)/,"").trim()} · ${v.lang}</option>`).join(""):'<option>German voice (default)</option>';
+  const si=voices.findIndex(v=>v.name===saved);
+  voice=voices[si>=0?si:0]||null; if(si>=0)$("voice").value=si;
+}
+if("speechSynthesis" in window){loadVoices();speechSynthesis.onvoiceschanged=loadVoices}
+function speak(text,hlEl){
+  if(!("speechSynthesis" in window))return alert("Speech not supported on this browser");
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="de-DE"; if(voice)u.voice=voice; u.rate=+$("rate").value;
+  if(hlEl){
+    const ws=[...hlEl.querySelectorAll(".w")], starts=[];let p=0;
+    ws.forEach(w=>{p=text.indexOf(w.textContent,p);starts.push(p);p+=w.textContent.length});
+    u.onboundary=e=>{ws.forEach(w=>w.classList.remove("hl"));let n=starts.findLastIndex(s=>s<=e.charIndex);if(n>=0)ws[n].classList.add("hl")};
+    u.onend=()=>ws.forEach(w=>w.classList.remove("hl"));
+  }
+  speechSynthesis.speak(u);
+}
+function sayCurrent(){
+  const c=deck[i];if(!c)return;
+  if($("card").classList.contains("flip"))speak(c.a,$("ba"));else speak(c.q);
+}
+
+/* events */
+$("chips").onclick=e=>{const t=e.target.dataset.t;if(!t)return;topic=t;i=0;build();chips();render()};
+$("scene").onclick=()=>{if(deck[i])$("card").classList.toggle("flip")};
+$("next").onclick=()=>{speechSynthesis?.cancel();i=(i+1)%Math.max(deck.length,1);render()};
+$("prev").onclick=()=>{speechSynthesis?.cancel();i=(i-1+deck.length)%Math.max(deck.length,1);render()};
+$("say").onclick=sayCurrent;
+$("mark").onclick=()=>{const c=deck[i];if(!c)return;known.has(c.id)?known.delete(c.id):known.add(c.id);store.set("gk",[...known]);if(onlyTodo){build()}else if(known.has(c.id)){i=(i+1)%deck.length}render()};
+$("shuffle").onclick=()=>{for(let n=deck.length-1;n>0;n--){const r=Math.random()*(n+1)|0;[deck[n],deck[r]]=[deck[r],deck[n]]}i=0;render()};
+$("todo").onclick=()=>{onlyTodo=!onlyTodo;i=0;build();render()};
+$("listBtn").onclick=()=>{listMode=true;$("list").classList.add("show");$("study").style.display="none";$("list").insertAdjacentHTML("beforebegin","");render();$("list").insertAdjacentHTML("afterbegin",'<button class="btn" id="back">← Back to cards</button>');$("back").onclick=()=>{listMode=false;$("list").classList.remove("show");$("study").style.display="";render()}};
+$("list").addEventListener("click",e=>{const a=e.target.dataset.say,q=e.target.dataset.sayq;if(a)speak(D[a].a);if(q)speak(D[q].q)});
+$("rate").oninput=e=>{$("rateV").textContent=(+e.target.value).toFixed(2)+"×";store.set("gr",e.target.value)};
+$("voice").onchange=e=>{voice=voices[e.target.value]||null;if(voice)store.set("gv",voice.name)};
+document.onkeydown=e=>{if(listMode)return;if(e.key==="ArrowRight")$("next").click();else if(e.key==="ArrowLeft")$("prev").click();else if(e.key===" "){e.preventDefault();$("scene").click()}else if(e.key.toLowerCase()==="s")sayCurrent()};
+let tx=0;$("scene").addEventListener("touchstart",e=>tx=e.touches[0].clientX,{passive:true});
+$("scene").addEventListener("touchend",e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>60){e.preventDefault();(dx<0?$("next"):$("prev")).click()}});
+
+const r=store.get("gr",null);if(r){$("rate").value=r;$("rateV").textContent=(+r).toFixed(2)+"×"}
+chips();build();render();
+</script>
+</body>
+</html>
